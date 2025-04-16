@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 43 38% 92%;
+    --foreground: 0 0% 30%;
+
+    --card: 43 38% 92%;
+    --card-foreground: 0 0% 30%;
+
+    --popover: 43 38% 92%;
+    --popover-foreground: 0 0% 30%;
+
+    --primary: 30 24% 72%;
+    --primary-foreground: 27 47% 20%;
+
+    --secondary: 30 24% 64%;
+    --secondary-foreground: 0 0% 30%;
+
+    --muted: 30 15% 86%;
+    --muted-foreground: 0 0% 48%;
+
+    --accent: 33 27% 54%;
+    --accent-foreground: 0 0% 98%;
+
+    --button-text: 0 0% 100%; /* Light text (white) */
+    --button-bg: 30 24% 72%; /* Default button background */
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 43 38% 92%;
+
+    --border: 30 15% 76%;
+    --input: 30 15% 76%;
+    --ring: 33 27% 54%;
+
+    --radius: 0.5rem;
+
+    /* Cores personalizadas */
+    --primary-100: 30 24% 75%;
+    --primary-200: 30 15% 64%;
+    --primary-300: 27 15% 38%;
+    --accent-100: 33 27% 54%;
+    --accent-200: 27 47% 20%;
+    --text-100: 0 0% 30%;
+    --text-200: 0 0% 48%;
+    --bg-100: 43 38% 92%;
+    --bg-200: 43 25% 88%;
+    --bg-300: 43 10% 72%;
+  }
+
+  .dark {
+    --background: 27 15% 15%;
+    --foreground: 43 38% 92%;
+
+    --card: 27 15% 18%;
+    --card-foreground: 43 38% 92%;
+
+    --popover: 27 15% 18%;
+    --popover-foreground: 43 38% 92%;
+
+    --primary: 30 24% 64%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 27 15% 28%;
+    --secondary-foreground: 43 38% 92%;
+
+    --muted: 27 15% 25%;
+    --muted-foreground: 0 0% 64%;
+
+    --button-text: 0 0% 10%; /* Dark text (black) */
+    --button-bg: 30 24% 64%; /* Dark button background */
+
+    --accent: 33 27% 44%;
+    --accent-foreground: 43 38% 92%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 43 38% 92%;
+
+    --border: 27 15% 30%;
+    --input: 27 15% 30%;
+    --ring: 33 27% 54%;
+
+    /* Cores personalizadas no modo escuro */
+    --primary-100: 30 24% 45%;
+    --primary-200: 30 15% 35%;
+    --primary-300: 27 15% 75%;
+    --accent-100: 33 27% 64%;
+    --accent-200: 27 47% 80%;
+    --text-100: 0 0% 90%;
+    --text-200: 0 0% 70%;
+    --bg-100: 27 15% 15%;
+    --bg-200: 27 15% 20%;
+    --bg-300: 27 15% 25%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Transição suave para todos os elementos ao mudar o tema */
+  .theme-transition * {
+    transition-property: color, background-color, border-color,
+      text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 400ms;
+  }
+}
+
+@layer components {
+  .gradient-primary {
+    @apply bg-gradient-to-r from-primary-100 to-primary-200 dark:from-primary-200 dark:to-primary-100;
+  }
+
+  .gradient-accent {
+    @apply bg-gradient-to-r;
+    background: linear-gradient(
+      to right,
+      hsl(var(--button-bg)),
+      hsl(var(--button-bg), 0.8)
+    );
+    color: hsl(var(--button-text));
+  }
+
+  .gradient-bg {
+    @apply bg-gradient-to-b from-bg-100 to-bg-200 dark:from-bg-100 dark:to-bg-200;
+  }
+
+  .gradient-card {
+    @apply bg-gradient-to-br from-white to-bg-100 dark:from-bg-200 dark:to-bg-100;
+  }
+
+  .gradient-header {
+    @apply bg-gradient-to-r from-primary-200 to-accent-100 dark:from-accent-100 dark:to-primary-200;
+  }
+
+  /* Estilos específicos para o modo escuro */
+  .dark .card-shadow {
+    @apply shadow-[0_4px_20px_rgba(0,0,0,0.25)];
+  }
+
+  /* Estilos específicos para o modo claro */
+  .card-shadow {
+    @apply shadow-[0_4px_20px_rgba(0,0,0,0.08)];
+  }
+}
