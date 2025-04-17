@@ -11,17 +11,16 @@ import { api } from "@/lib/api";
 
 // Atualizar a interface User para corresponder à entidade do backend
 interface User {
-  id: number;
   login: string;
   name: string;
   email: string;
-  role: UserRole;
+  role: UserRole; // Ensure this matches the backend's role format
 }
 
 // Adicionar o enum UserRole
-enum UserRole {
-  USER = 0,
-  ADMIN = 1,
+export enum UserRole {
+  ADMIN = 0,
+  USER = 1,
 }
 
 interface AuthContextType {
@@ -47,23 +46,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const fetchUser = async () => {
         try {
-          // Call the /auth/me endpoint to fetch the current user
+          console.log("Fetching user data...");
           const response = await api.get("/auth/me");
-          setUser(response.data); // Set the user data from the response
+          console.log("User data from /auth/me:", response.data);
+          setUser(response.data); // Ensure this matches the User interface
         } catch (error: any) {
           console.error("Erro ao carregar usuário:", error);
-
-          // Handle unauthorized or other errors
-          if (error.response && error.response.status === 401) {
-            console.warn("Usuário não autenticado, limpando dados locais.");
-          }
-
-          // Clear localStorage and authorization header if the fetch fails
           localStorage.removeItem("token");
           localStorage.removeItem("user");
           delete api.defaults.headers.Authorization;
         } finally {
-          setIsLoading(false); // Stop the loading state
+          setIsLoading(false);
         }
       };
 

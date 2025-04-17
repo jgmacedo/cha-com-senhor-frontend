@@ -1,59 +1,68 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Coffee, BookOpen, User, Settings, LogOut, Menu } from "lucide-react"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { useAuth } from "@/contexts/auth-context"
-import { cn } from "@/lib/utils"
-import { ThemeToggle, ThemeToggleWithLabel } from "@/components/theme-toggle"
-import { useTheme } from "next-themes"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Coffee, BookOpen, User, Settings, LogOut, Menu } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useAuth, UserRole } from "@/contexts/auth-context";
+import { cn } from "@/lib/utils";
+import { ThemeToggle, ThemeToggleWithLabel } from "@/components/theme-toggle";
+import { useTheme } from "next-themes";
 
 interface DashboardLayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const { user, logout } = useAuth()
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const { theme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   // Evita problemas de hidratação
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
-  const isAdmin = user?.role === "ADMIN"
+  const isAdmin = user?.role === UserRole.ADMIN;
 
   const navigation = [
     { name: "Devocional", href: "/dashboard", icon: BookOpen },
     { name: "Perfil", href: "/dashboard/profile", icon: User },
-    ...(isAdmin ? [{ name: "Administração", href: "/admin", icon: Settings }] : []),
-  ]
+    ...(isAdmin
+      ? [{ name: "Administração", href: "/admin", icon: Settings }]
+      : []),
+  ];
 
   const handleLogout = () => {
-    logout()
-    router.push("/")
-  }
+    logout();
+    router.push("/");
+  };
 
   return (
     <div className="min-h-screen bg-bg-100 transition-colors duration-300">
       {/* Mobile menu */}
       <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="md:hidden fixed top-4 left-4 z-50">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden fixed top-4 left-4 z-50"
+          >
             <Menu className="h-6 w-6" />
             <span className="sr-only">Abrir menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="gradient-header text-white w-64 p-0">
+        <SheetContent
+          side="left"
+          className="gradient-header text-white w-64 p-0"
+        >
           <div className="flex flex-col h-full">
             <div className="flex items-center gap-2 p-6 border-b border-white/20">
               <Coffee className="h-6 w-6" />
@@ -67,7 +76,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       href={item.href}
                       className={cn(
                         "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                        pathname === item.href ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10",
+                        pathname === item.href
+                          ? "bg-white/20 text-white"
+                          : "text-white/80 hover:bg-white/10"
                       )}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
@@ -108,7 +119,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   href={item.href}
                   className={cn(
                     "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                    pathname === item.href ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10",
+                    pathname === item.href
+                      ? "bg-white/20 text-white"
+                      : "text-white/80 hover:bg-white/10"
                   )}
                 >
                   <item.icon className="h-5 w-5" />
@@ -143,8 +156,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="md:hidden">{mounted && <ThemeToggle />}</div>
           </div>
         </header>
-        <main className="p-4 sm:p-6 md:p-8 transition-colors duration-300">{children}</main>
+        <main className="p-4 sm:p-6 md:p-8 transition-colors duration-300">
+          {children}
+        </main>
       </div>
     </div>
-  )
+  );
 }
