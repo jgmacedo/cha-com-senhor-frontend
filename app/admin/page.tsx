@@ -31,7 +31,7 @@ export default function AdminPage() {
       return;
     }
 
-    if (user?.role !== 0) {
+    if (!user?.roles.includes("ADMIN")) {
       toast({
         title: "Acesso negado",
         description: "Você não tem permissão para acessar esta página",
@@ -41,7 +41,7 @@ export default function AdminPage() {
     }
   }, [isAuthenticated, router, toast, user]);
 
-  if (!isAuthenticated || user?.role !== 0) {
+  if (!isAuthenticated || !user?.roles.includes("ADMIN")) {
     return null;
   }
 

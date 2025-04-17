@@ -9,150 +9,87 @@ import {
 } from "react";
 import { api } from "@/lib/api";
 
-// Atualizar a interface User para corresponder à entidade do backend
-interface User {
-  login: string;
-  name: string;
-  email: string;
-  role: UserRole; // Ensure this matches the backend's role format
-}
-
-// Adicionar o enum UserRole
-export enum UserRole {
-  ADMIN = 0,
-  USER = 1,
-}
-
 interface AuthContextType {
-  user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  user: { username: string; roles: string[] } | null; // Add user to context type
   login: (login: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<{
+    username: string;
+    roles: string[];
+  } | null>(null);
+
+  useEffect(() => {
+    console.log("AuthProvider useEffect triggered");
+    if (typeof window !== "undefined") {
+      console.log("Running in the browser");
+      const token = localStorage.getItem("token");
+      const storedUser = localStorage.getItem("user");
+
+      if (token && storedUser) {
+        console.log("Token and user found in localStorage");
+        api.defaults.headers.Authorization = `Bearer ${token}`;
+        setUser(JSON.parse(storedUser));
+        setIsAuthenticated(true);
+      } else {
+        console.log("No token or user found in localStorage");
+        setIsAuthenticated(false);
+      }
+    } else {
+      console.log("Running on the server");
+    }
+    setIsLoading(false);
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
     if (token) {
       api.defaults.headers.Authorization = `Bearer ${token}`;
-
-      const fetchUser = async () => {
-        try {
-          console.log("Fetching user data...");
-          const response = await api.get("/auth/me");
-          console.log("User data from /auth/me:", response.data);
-          setUser(response.data); // Ensure this matches the User interface
-        } catch (error: any) {
-          console.error("Erro ao carregar usuário:", error);
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          delete api.defaults.headers.Authorization;
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      fetchUser();
-    } else {
-      setIsLoading(false);
     }
   }, []);
 
-  // Atualizar a função de login para incluir o campo login
   const login = async (login: string, password: string) => {
     try {
       const response = await api.post("/auth/login", { login, password });
-      const { token, user } = response.data;
+      const { token, username, roles } = response.data;
 
+      // Store token and user data in localStorage
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("user", JSON.stringify({ username, roles }));
 
       api.defaults.headers.Authorization = `Bearer ${token}`;
-      setUser(user);
-
-      return user;
+      setIsAuthenticated(true);
     } catch (error) {
       console.error("Erro ao fazer login:", error);
       throw error;
     }
   };
 
-  // Atualizar a função de registro para incluir validações e adequar ao RegisterDTO
-  const register = async (name: string, email: string, password: string) => {
-    try {
-      // Trim input values
-      const trimmedName = name.trim();
-      const trimmedEmail = email.trim();
-      const trimmedPassword = password.trim();
-
-      // Validate required fields
-      if (!trimmedName || !trimmedEmail || !trimmedPassword) {
-        throw new Error("Todos os campos são obrigatórios");
-      }
-
-      // Validate empty fields
-      if (trimmedName === "" || trimmedEmail === "" || trimmedPassword === "") {
-        throw new Error("Os campos não podem estar vazios");
-      }
-
-      // Validate email format
-      if (!trimmedEmail.match(/^[A-Za-z0-9+_.-]+@(.+)$/)) {
-        throw new Error("Formato de email inválido");
-      }
-
-      // Validate password strength
-      if (!trimmedPassword.match(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/)) {
-        throw new Error(
-          "A senha deve ter pelo menos 8 caracteres, incluindo uma letra e um número"
-        );
-      }
-
-      // Create login based on email (before the @)
-      const login = trimmedEmail.split("@")[0];
-
-      // Send data to the register endpoint
-      const response = await api.post("/auth/register", {
-        login,
-        name: trimmedName,
-        email: trimmedEmail,
-        password: trimmedPassword,
-      });
-
-      console.log("Usuário registrado com sucesso:", response.data);
-    } catch (error: any) {
-      if (error.response && error.response.data) {
-        console.error("Erro ao registrar:", error.response.data);
-        throw new Error(error.response.data);
-      } else {
-        console.error("Erro inesperado ao registrar:", error);
-        throw new Error("Erro inesperado ao registrar");
-      }
-    }
-  };
-
   const logout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
     delete api.defaults.headers.Authorization;
-    setUser(null);
+    setIsAuthenticated(false);
   };
+
+  if (isLoading) {
+    return <p>Loading...</p>; // Or a spinner component
+  }
 
   return (
     <AuthContext.Provider
       value={{
-        user,
-        isAuthenticated: !!user,
+        isAuthenticated,
         isLoading,
+        user, // Expose user data
         login,
-        register,
         logout,
       }}
     >

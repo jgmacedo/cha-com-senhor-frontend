@@ -8,7 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Coffee, BookOpen, User, Settings, LogOut, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useAuth, UserRole } from "@/contexts/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
 import { ThemeToggle, ThemeToggleWithLabel } from "@/components/theme-toggle";
 import { useTheme } from "next-themes";
@@ -30,7 +30,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     setMounted(true);
   }, []);
 
-  const isAdmin = user?.role === UserRole.ADMIN;
+  const isAdmin = user?.roles?.includes("ADMIN");
 
   const navigation = [
     { name: "Devocional", href: "/dashboard", icon: BookOpen },
