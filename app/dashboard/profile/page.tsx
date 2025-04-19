@@ -1,110 +1,126 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useToast } from "@/hooks/use-toast"
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { useAuth } from "@/contexts/auth-context"
-import { User } from "lucide-react"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { useAuth } from "@/contexts/auth-context";
+import { User } from "lucide-react";
 
 export default function ProfilePage() {
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [currentPassword, setCurrentPassword] = useState("")
-  const [newPassword, setNewPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const { toast } = useToast()
-  const { user, isAuthenticated } = useAuth()
-  const router = useRouter()
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const {
+    user,
+    isAuthenticated,
+  }: {
+    user: { username: string; roles: string[]; email?: string } | null;
+    isAuthenticated: boolean;
+  } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push("/auth/login")
-      return
+      router.push("/auth/login");
+      return;
     }
 
     if (user) {
-      setName(user.name)
-      setEmail(user.email)
+      setName(user.username);
+      setEmail(user.email || "");
     }
-  }, [isAuthenticated, router, user])
+  }, [isAuthenticated, router, user]);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
       // Aqui você faria uma chamada para a API para atualizar o perfil
       // Como não temos esse endpoint, vamos simular com um timeout
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       toast({
         title: "Perfil atualizado",
         description: "Suas informações foram atualizadas com sucesso",
-      })
+      });
     } catch (error) {
       toast({
         title: "Erro ao atualizar perfil",
         description: "Não foi possível atualizar suas informações",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (newPassword !== confirmPassword) {
       toast({
         title: "As senhas não coincidem",
         description: "A nova senha e a confirmação devem ser iguais",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
       // Aqui você faria uma chamada para a API para atualizar a senha
       // Como não temos esse endpoint, vamos simular com um timeout
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       toast({
         title: "Senha atualizada",
         description: "Sua senha foi atualizada com sucesso",
-      })
+      });
 
-      setCurrentPassword("")
-      setNewPassword("")
-      setConfirmPassword("")
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
     } catch (error) {
       toast({
         title: "Erro ao atualizar senha",
         description: "Não foi possível atualizar sua senha",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <DashboardLayout>
       <div className="grid gap-6 md:grid-cols-2">
+        {/* Seção de Informações Pessoais */}
         <Card>
           <CardHeader>
             <CardTitle>Informações Pessoais</CardTitle>
-            <CardDescription>Atualize suas informações de perfil</CardDescription>
+            <CardDescription>
+              Atualize suas informações de perfil
+            </CardDescription>
           </CardHeader>
           <form onSubmit={handleUpdateProfile}>
             <CardContent className="space-y-4">
@@ -118,22 +134,49 @@ export default function ProfilePage() {
 
               <div className="space-y-2">
                 <Label htmlFor="name">Nome</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  value={user?.username || ""}
+                  disabled
+                  className="bg-gray-50 dark:bg-gray-800"
+                />
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="bg-amber-700 hover:bg-amber-800" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="bg-amber-700 hover:bg-amber-800"
+                disabled={isLoading}
+              >
                 {isLoading ? "Salvando..." : "Salvar Alterações"}
               </Button>
             </CardFooter>
           </form>
         </Card>
 
+        {/* Seção de Alterar Senha */}
         <Card>
           <CardHeader>
             <CardTitle>Alterar Senha</CardTitle>
@@ -175,7 +218,11 @@ export default function ProfilePage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="bg-amber-700 hover:bg-amber-800" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="bg-amber-700 hover:bg-amber-800"
+                disabled={isLoading}
+              >
                 {isLoading ? "Atualizando..." : "Atualizar Senha"}
               </Button>
             </CardFooter>
@@ -183,5 +230,5 @@ export default function ProfilePage() {
         </Card>
       </div>
     </DashboardLayout>
-  )
+  );
 }
