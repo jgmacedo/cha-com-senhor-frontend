@@ -40,6 +40,9 @@ interface Devotional {
   };
 }
 
+const normalizeDate = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
 export default function DashboardPage() {
   const [devotional, setDevotional] = useState<Devotional | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,19 +56,23 @@ export default function DashboardPage() {
     const fetchAvailableDates = async () => {
       try {
         const response = await api.get("/devotionals/dates");
-        const dates = response.data
-          .map((dateStr: string) => {
-            const date = new Date(dateStr);
-            return isValid(date) ? date : null;
-          })
-          .filter((date: Date | null): date is Date => date !== null);
+        console.log("Resposta do backend:", response.data);
+
+        const dates = response.data.data.map((dateStr: string) => {
+          const parsedDate = new Date(dateStr);
+          return isValid(parsedDate)
+            ? new Date(
+                parsedDate.getFullYear(),
+                parsedDate.getMonth(),
+                parsedDate.getDate()
+              )
+            : null;
+        });
+
+        console.log("Datas normalizadas:", dates);
         setAvailableDates(dates);
       } catch (error) {
-        toast({
-          title: "Erro ao carregar datas",
-          description: "Não foi possível carregar as datas disponíveis",
-          variant: "destructive",
-        });
+        console.error("Erro ao buscar datas disponíveis:", error);
       }
     };
 
@@ -78,11 +85,19 @@ export default function DashboardPage() {
     const fetchDevotional = async () => {
       setIsLoading(true);
       try {
-        if (!date || !isValid(date)) {
-          throw new Error("Data inválida");
+        if (!date || !isValid(date)) return;
+
+        const normalized = normalizeDate(date);
+        const isAvailable = availableDates.some(
+          (d) => d.getTime() === normalized.getTime()
+        );
+
+        if (!isAvailable) {
+          setDevotional(null);
+          return;
         }
 
-        const formattedDate = format(date, "yyyy-MM-dd");
+        const formattedDate = format(normalized, "yyyy-MM-dd");
         const response = await api.get(
           `/devotionals/check_date?date=${formattedDate}`
         );
@@ -99,19 +114,10 @@ export default function DashboardPage() {
       }
     };
 
-    if (isAuthenticated) {
+    if (isAuthenticated && availableDates.length > 0) {
       fetchDevotional();
     }
-  }, [date, isAuthenticated]);
-
-  const isToday = (date: Date) => {
-    const today = new Date();
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
-  };
+  }, [date, isAuthenticated, availableDates]);
 
   if (!isAuthenticated) {
     router.push("/auth/login");
@@ -146,26 +152,26 @@ export default function DashboardPage() {
                   <Calendar
                     mode="single"
                     selected={date}
-                    onSelect={(newDate) => setDate(newDate || undefined)} // Add explicit undefined handling
+                    onSelect={(newDate) => {
+                      if (newDate) {
+                        const normalized = normalizeDate(newDate);
+                        setDate(normalized);
+                      }
+                    }}
                     locale={ptBR}
                     modifiers={{
                       available: availableDates,
                     }}
-                    modifiersStyles={{
-                      available: {
-                        fontWeight: "bold",
-                        color: "#A68B6E",
-                      },
+                    modifiersClassNames={{
+                      available: "font-bold text-[#A68B6E]",
                     }}
                     className="rounded-md border-primary-100"
-                    disabled={(date) =>
-                      !availableDates.some(
-                        (availableDate) =>
-                          availableDate.getDate() === date.getDate() &&
-                          availableDate.getMonth() === date.getMonth() &&
-                          availableDate.getFullYear() === date.getFullYear()
-                      )
-                    }
+                    disabled={(day) => {
+                      const dayStr = day.toDateString();
+                      return !availableDates.some(
+                        (d) => d.toDateString() === dayStr
+                      );
+                    }}
                   />
                 </PopoverContent>
               </Popover>
@@ -191,9 +197,7 @@ export default function DashboardPage() {
                   : "Nenhum devocional disponível"}
               </CardTitle>
               <CardDescription className="text-text-200">
-                {devotional &&
-                devotional.date &&
-                isValid(new Date(devotional.date))
+                {devotional?.date && isValid(new Date(devotional.date))
                   ? format(new Date(devotional.date), "PPP", {
                       locale: ptBR,
                     })
