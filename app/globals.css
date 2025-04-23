@@ -140,12 +140,10 @@
     @apply bg-gradient-to-r from-primary-200 to-accent-100 dark:from-accent-100 dark:to-primary-200;
   }
 
-  /* Estilos específicos para o modo escuro */
   .dark .card-shadow {
     @apply shadow-[0_4px_20px_rgba(0,0,0,0.25)];
   }
 
-  /* Estilos específicos para o modo claro */
   .card-shadow {
     @apply shadow-[0_4px_20px_rgba(0,0,0,0.08)];
   }
