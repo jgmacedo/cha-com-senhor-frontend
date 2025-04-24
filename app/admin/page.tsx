@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api"; // Ensure this is correctly configured
 import {
   Card,
   CardContent,
@@ -13,10 +14,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { DashboardLayout } from "@/components/dashboard-layout";
-import { BibleVersesList } from "@/components/admin/bible-verses-list";
+import { BibleVersesList as ImportedBibleVersesList } from "@/components/admin/bible-verses-list";
 import { DevotionalsList } from "@/components/admin/devotionals-list";
 import { CreateBibleVerseForm } from "@/components/admin/create-bible-verse-form";
 import { CreateDevotionalForm } from "@/components/admin/create-devotional-form";
+
+type User = {
+  id: number;
+  name: string;
+  email: string;
+  role: Array<string>;
+};
 
 export function UsersTable({ users }: { users?: User[] }) {
   if (!users || users.length === 0) {
@@ -45,7 +53,13 @@ export function UsersTable({ users }: { users?: User[] }) {
   );
 }
 
-export function BibleVersesList({ verses }: { verses?: Verse[] }) {
+type Verse = {
+  id: number;
+  text: string;
+  reference: string;
+};
+
+export function LocalBibleVersesList({ verses }: { verses?: Verse[] }) {
   if (!verses || verses.length === 0) {
     return <p>Nenhum versículo encontrado.</p>;
   }
@@ -62,13 +76,17 @@ export function BibleVersesList({ verses }: { verses?: Verse[] }) {
 }
 
 export default function AdminPage() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("users");
+  const [users, setUsers] = useState([]);
+  const [bibleVerses, setBibleVerses] = useState([]);
+  const [devotionals, setDevotionals] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (isLoading) return; // Wait for loading to complete
+    if (authLoading) return; // Wait for loading to complete
 
     if (!isAuthenticated) {
       router.push("/auth/login");
@@ -83,10 +101,36 @@ export default function AdminPage() {
       });
       router.push("/dashboard");
     }
-  }, [isAuthenticated, isLoading, router, toast, user]);
+  }, [isAuthenticated, authLoading, router, toast, user]);
 
-  if (isLoading || !isAuthenticated || !user?.roles.includes("ROLE_ADMIN")) {
-    return null;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [usersResponse, versesResponse, devotionalsResponse] = await Promise.all([
+          api.get("/admin/users"),
+          api.get("/admin/get_all_bible_verses"),
+          api.get("/admin/get_all_devotionals"),
+        ]);
+
+        setUsers(usersResponse.data.data);
+        setBibleVerses(versesResponse.data.data);
+        setDevotionals(devotionalsResponse.data.data);
+      } catch (error) {
+        toast({
+          title: "Erro ao carregar dados",
+          description: "Não foi possível carregar os dados do servidor.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [toast]);
+
+  if (authLoading || isLoading || !isAuthenticated || !user?.roles.includes("ROLE_ADMIN")) {
+    return <p>Carregando...</p>;
   }
 
   return (
@@ -124,7 +168,7 @@ export default function AdminPage() {
             </TabsList>
 
             <TabsContent value="users" className="space-y-4">
-              <UsersTable />
+              <UsersTable users={users} />
             </TabsContent>
 
             <TabsContent value="verses" className="space-y-8">
@@ -146,7 +190,7 @@ export default function AdminPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <BibleVersesList />
+                  <ImportedBibleVersesList verses={bibleVerses} />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -170,7 +214,7 @@ export default function AdminPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <DevotionalsList />
+                  <DevotionalsList devotionals={devotionals} />
                 </CardContent>
               </Card>
             </TabsContent>
