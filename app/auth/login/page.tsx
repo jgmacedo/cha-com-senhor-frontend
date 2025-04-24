@@ -18,41 +18,46 @@ export default function LoginPage() {
   const [login, setLogin] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [mounted, setMounted] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
-  const { login: loginUser } = useAuth()
-
-  // Evita problemas de hidratação
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const { login: loginUser, isAdmin, isAuthenticated, user } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
-      await loginUser(login, password)
+      await loginUser(login, password);
+
       toast({
         title: "Login realizado com sucesso",
-        description: "Você será redirecionado para o dashboard",
-      })
-      router.push("/dashboard")
+        description: "Você será redirecionado",
+      });
+
+      // Use user.roles directly to avoid race conditions
+      if (user?.roles.includes("ROLE_ADMIN")) {
+        console.log("Redirecting to /admin");
+        router.push("/admin");
+      } else {
+        console.log("Redirecting to /dashboard");
+        router.push("/dashboard");
+      }
     } catch (error) {
       toast({
         title: "Erro ao fazer login",
         description: "Verifique suas credenciais e tente novamente",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center gradient-bg p-4 relative transition-colors duration-300">
-      <div className="absolute top-4 right-4">{mounted && <ThemeToggle />}</div>
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <Card className="w-full max-w-md gradient-card border-none card-shadow transition-all duration-300">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -73,7 +78,7 @@ export default function LoginPage() {
               </Label>
               <Input
                 id="login"
-                placeholder="seu_usuario"
+                placeholder="Usuário"
                 value={login}
                 onChange={(e) => setLogin(e.target.value)}
                 required

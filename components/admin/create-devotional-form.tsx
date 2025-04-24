@@ -23,7 +23,7 @@ interface BibleVerse {
   text: string
 }
 
-export function CreateDevotionalForm() {
+export function CreateDevotionalForm({ onSubmit }: { onSubmit?: (data: any) => void }) {
   const [title, setTitle] = useState("")
   const [reflection, setReflection] = useState("")
   const [prayer, setPrayer] = useState("")
@@ -41,68 +41,64 @@ export function CreateDevotionalForm() {
   }, [])
 
   const fetchVerses = async () => {
-    setIsLoadingVerses(true)
+    setIsLoadingVerses(true);
     try {
-      const response = await api.get("/admin/get_all_bible_verses")
-      setVerses(response.data)
+      const response = await api.get("/admin/get_all_bible_verses");
+      console.log("Verses API response:", response.data); // Debugging
+      setVerses(response.data);
     } catch (error) {
       toast({
         title: "Erro ao carregar versículos",
         description: "Não foi possível carregar a lista de versículos",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoadingVerses(false)
+      setIsLoadingVerses(false);
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (!date || !selectedVerseId) {
+    if (!selectedVerseId) {
       toast({
         title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos",
+        description: "Por favor, selecione um versículo",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
-      await api.post(`/admin/create_daily_devotional/${selectedVerseId}`, {
-        title,
-        reflection,
-        prayer,
-        practicalApplication,
-        supportingVerses,
-        date: format(date, "yyyy-MM-dd"),
-      })
+      const response = await api.post(`/admin/create_daily_devotional/${selectedVerseId}`);
 
-      toast({
-        title: "Devocional criado",
-        description: "O devocional foi criado com sucesso",
-      })
+      if (response.status === 201) {
+        toast({
+          title: "Devocional criado",
+          description: "O devocional foi criado com sucesso",
+        });
 
-      // Limpar o formulário
-      setTitle("")
-      setReflection("")
-      setPrayer("")
-      setPracticalApplication("")
-      setSupportingVerses("")
-      setDate(new Date())
-      setSelectedVerseId("")
-    } catch (error) {
+        // Clear the form
+        setSelectedVerseId("");
+      } else {
+        toast({
+          title: "Erro ao criar devocional",
+          description: response.data?.message || "Erro desconhecido",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
       toast({
         title: "Erro ao criar devocional",
-        description: "Não foi possível criar o devocional",
+        description: error.response?.data?.message || "Erro desconhecido",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -148,87 +144,18 @@ export function CreateDevotionalForm() {
               <SelectValue placeholder="Selecione um versículo" />
             </SelectTrigger>
             <SelectContent>
-              {verses.map((verse) => (
-                <SelectItem key={verse.id} value={verse.id.toString()}>
-                  {verse.reference}
-                </SelectItem>
-              ))}
+              {Array.isArray(verses) && verses.length > 0 ? (
+                verses.map((verse) => (
+                  <SelectItem key={verse.id} value={verse.id.toString()}>
+                    {verse.reference}
+                  </SelectItem>
+                ))
+              ) : (
+                <p className="text-text-200">Nenhum versículo disponível</p>
+              )}
             </SelectContent>
           </Select>
         )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="title" className="text-text-100">
-          Título
-        </Label>
-        <Input
-          id="title"
-          placeholder="Título do devocional"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-          className="border-primary-100"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="reflection" className="text-text-100">
-          Reflexão
-        </Label>
-        <Textarea
-          id="reflection"
-          placeholder="Digite a reflexão do devocional..."
-          value={reflection}
-          onChange={(e) => setReflection(e.target.value)}
-          rows={6}
-          required
-          className="border-primary-100"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="prayer" className="text-text-100">
-          Oração
-        </Label>
-        <Textarea
-          id="prayer"
-          placeholder="Digite a oração do devocional..."
-          value={prayer}
-          onChange={(e) => setPrayer(e.target.value)}
-          rows={4}
-          required
-          className="border-primary-100"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="practicalApplication" className="text-text-100">
-          Aplicação Prática
-        </Label>
-        <Textarea
-          id="practicalApplication"
-          placeholder="Digite a aplicação prática do devocional..."
-          value={practicalApplication}
-          onChange={(e) => setPracticalApplication(e.target.value)}
-          rows={4}
-          required
-          className="border-primary-100"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="supportingVerses" className="text-text-100">
-          Versículos de Apoio
-        </Label>
-        <Textarea
-          id="supportingVerses"
-          placeholder="Digite os versículos de apoio (separados por vírgula)..."
-          value={supportingVerses}
-          onChange={(e) => setSupportingVerses(e.target.value)}
-          rows={3}
-          className="border-primary-100"
-        />
       </div>
 
       <Button

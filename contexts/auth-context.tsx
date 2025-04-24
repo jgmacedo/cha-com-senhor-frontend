@@ -12,7 +12,8 @@ import { api } from "@/lib/api";
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
-  user: { username: string; roles: string[] } | null; // Add user to context type
+  user: { username: string; roles: string[] } | null;
+  isAdmin: boolean;
   login: (login: string, password: string) => Promise<void>;
   logout: () => void;
 }
@@ -20,12 +21,12 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<{ username: string; roles: string[] } | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<{
-    username: string;
-    roles: string[];
-  } | null>(null);
+
+  // Check if the user has the "ROLE_ADMIN" role
+  const isAdmin = user?.roles.some((role) => role === "ROLE_ADMIN") ?? false;
 
   useEffect(() => {
     console.log("AuthProvider useEffect triggered");
@@ -35,13 +36,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const storedUser = localStorage.getItem("user");
 
       if (token && storedUser) {
-        console.log("Token and user found in localStorage");
-        api.defaults.headers.Authorization = `Bearer ${token}`;
-        setUser(JSON.parse(storedUser));
-        setIsAuthenticated(true);
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          setIsAuthenticated(true);
+          api.defaults.headers.Authorization = `Bearer ${token}`;
+          console.log("User roles:", parsedUser.roles); // Debug roles
+          console.log("isAdmin:", isAdmin); // Debug isAdmin
+        } catch (error) {
+          // If there's an error parsing the user, clear the storage
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          setIsAuthenticated(false);
+          setUser(null);
+        }
       } else {
-        console.log("No token or user found in localStorage");
         setIsAuthenticated(false);
+        setUser(null);
       }
     } else {
       console.log("Running on the server");
@@ -49,23 +60,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      api.defaults.headers.Authorization = `Bearer ${token}`;
-    }
-  }, []);
-
   const login = async (login: string, password: string) => {
     try {
       const response = await api.post("/auth/login", { login, password });
-      const { token, username, roles } = response.data;
+      const { token, user: username, roles } = response.data;
 
-      // Store token and user data in localStorage
+      const userData = { username, roles };
+
+      // Save token and user data
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify({ username, roles }));
+      localStorage.setItem("user", JSON.stringify(userData));
 
       api.defaults.headers.Authorization = `Bearer ${token}`;
+      setUser(userData);
       setIsAuthenticated(true);
     } catch (error) {
       console.error("Erro ao fazer login:", error);
@@ -75,12 +82,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     delete api.defaults.headers.Authorization;
+    setUser(null);
     setIsAuthenticated(false);
   };
 
   if (isLoading) {
-    return <p>Loading...</p>; // Or a spinner component
+    return <p>Loading...</p>;
   }
 
   return (
@@ -88,7 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         isAuthenticated,
         isLoading,
-        user, // Expose user data
+        user,
+        isAdmin,
         login,
         logout,
       }}

@@ -13,25 +13,69 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { DashboardLayout } from "@/components/dashboard-layout";
-import { UsersTable } from "@/components/admin/users-table";
 import { BibleVersesList } from "@/components/admin/bible-verses-list";
 import { DevotionalsList } from "@/components/admin/devotionals-list";
 import { CreateBibleVerseForm } from "@/components/admin/create-bible-verse-form";
 import { CreateDevotionalForm } from "@/components/admin/create-devotional-form";
 
+export function UsersTable({ users }: { users?: User[] }) {
+  if (!users || users.length === 0) {
+    return <p>Nenhum usuário encontrado.</p>;
+  }
+
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Email</th>
+          <th>Função</th>
+        </tr>
+      </thead>
+      <tbody>
+        {users.map((user) => (
+          <tr key={user.id}>
+            <td>{user.name}</td>
+            <td>{user.email}</td>
+            <td>{user.role}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+export function BibleVersesList({ verses }: { verses?: Verse[] }) {
+  if (!verses || verses.length === 0) {
+    return <p>Nenhum versículo encontrado.</p>;
+  }
+
+  return (
+    <ul>
+      {verses.map((verse) => (
+        <li key={verse.id}>
+          {verse.text} - {verse.reference}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default function AdminPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("users");
 
   useEffect(() => {
+    if (isLoading) return; // Wait for loading to complete
+
     if (!isAuthenticated) {
       router.push("/auth/login");
       return;
     }
 
-    if (!user?.roles.includes("ADMIN")) {
+    if (!user?.roles.includes("ROLE_ADMIN")) {
       toast({
         title: "Acesso negado",
         description: "Você não tem permissão para acessar esta página",
@@ -39,9 +83,9 @@ export default function AdminPage() {
       });
       router.push("/dashboard");
     }
-  }, [isAuthenticated, router, toast, user]);
+  }, [isAuthenticated, isLoading, router, toast, user]);
 
-  if (!isAuthenticated || !user?.roles.includes("ADMIN")) {
+  if (isLoading || !isAuthenticated || !user?.roles.includes("ROLE_ADMIN")) {
     return null;
   }
 
