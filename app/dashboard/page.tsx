@@ -40,14 +40,16 @@ interface Devotional {
   };
 }
 
-const normalizeDate = (date: Date) =>
-  new Date(date.getFullYear(), date.getMonth(), date.getDate());
+// Formata a data como yyyy-MM-dd (para evitar problemas de fuso)
+const formatToDateKey = (date: Date) => {
+  return date.toISOString().split("T")[0];
+};
 
 export default function DashboardPage() {
   const [devotional, setDevotional] = useState<Devotional | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [availableDates, setAvailableDates] = useState<Date[]>([]);
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
@@ -56,21 +58,13 @@ export default function DashboardPage() {
     const fetchAvailableDates = async () => {
       try {
         const response = await api.get("/devotionals/dates");
-        console.log("Resposta do backend:", response.data);
-
-        const dates = response.data.data.map((dateStr: string) => {
-          const parsedDate = new Date(dateStr);
-          return isValid(parsedDate)
-            ? new Date(
-                parsedDate.getFullYear(),
-                parsedDate.getMonth(),
-                parsedDate.getDate()
-              )
-            : null;
-        });
-
-        console.log("Datas normalizadas:", dates);
-        setAvailableDates(dates);
+        const dates = response.data.data
+          .map((dateStr: string) => {
+            const parsedDate = new Date(dateStr);
+            return isValid(parsedDate) ? formatToDateKey(parsedDate) : null;
+          })
+          .filter((d: string | null) => d !== null);
+        setAvailableDates(dates as string[]);
       } catch (error) {
         console.error("Erro ao buscar datas disponíveis:", error);
       }
@@ -87,20 +81,15 @@ export default function DashboardPage() {
       try {
         if (!date || !isValid(date)) return;
 
-        const normalized = normalizeDate(date);
-        const isAvailable = availableDates.some(
-          (d) => d.getTime() === normalized.getTime()
-        );
+        const key = formatToDateKey(date);
+        const isAvailable = availableDates.includes(key);
 
         if (!isAvailable) {
           setDevotional(null);
           return;
         }
 
-        const formattedDate = format(normalized, "yyyy-MM-dd");
-        const response = await api.get(
-          `/devotionals/check_date?date=${formattedDate}`
-        );
+        const response = await api.get(`/devotionals/check_date?date=${key}`);
         setDevotional(response.data);
       } catch (error) {
         toast({
@@ -154,23 +143,20 @@ export default function DashboardPage() {
                     selected={date}
                     onSelect={(newDate) => {
                       if (newDate) {
-                        const normalized = normalizeDate(newDate);
-                        setDate(normalized);
+                        setDate(newDate);
                       }
                     }}
                     locale={ptBR}
                     modifiers={{
-                      available: availableDates,
+                      available: availableDates.map((d) => new Date(d)),
                     }}
                     modifiersClassNames={{
                       available: "font-bold text-[#A68B6E]",
                     }}
                     className="rounded-md border-primary-100"
                     disabled={(day) => {
-                      const dayStr = day.toDateString();
-                      return !availableDates.some(
-                        (d) => d.toDateString() === dayStr
-                      );
+                      const key = formatToDateKey(day);
+                      return !availableDates.includes(key);
                     }}
                   />
                 </PopoverContent>
@@ -272,18 +258,19 @@ export default function DashboardPage() {
                         <h3 className="text-xl font-semibold text-primary-300 mt-6">
                           Versículos de Apoio
                         </h3>
-                        <p className="text-text-100">
-                          {devotional.supportingVerses}
-                        </p>
+                        <div
+                          className="text-text-100"
+                          dangerouslySetInnerHTML={{
+                            __html: devotional.supportingVerses,
+                          }}
+                        />
                       </>
                     )}
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-12">
-                  <p className="text-text-200">
-                    Não há devocional disponível para esta data.
-                  </p>
+                <div className="flex justify-center items-center h-64 text-text-200">
+                  Nenhum devocional encontrado para a data selecionada.
                 </div>
               )}
             </CardContent>
