@@ -15,6 +15,7 @@ interface AuthContextType {
   user: { username: string; roles: string[] } | null;
   isAdmin: boolean;
   login: (login: string, password: string) => Promise<void>;
+  register: (name: string, login: string, email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -29,9 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = user?.roles.some((role) => role === "ROLE_ADMIN") ?? false;
 
   useEffect(() => {
-    console.log("AuthProvider useEffect triggered");
     if (typeof window !== "undefined") {
-      console.log("Running in the browser");
       const token = localStorage.getItem("token");
       const storedUser = localStorage.getItem("user");
 
@@ -41,8 +40,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(parsedUser);
           setIsAuthenticated(true);
           api.defaults.headers.Authorization = `Bearer ${token}`;
-          console.log("User roles:", parsedUser.roles); // Debug roles
-          console.log("isAdmin:", isAdmin); // Debug isAdmin
         } catch (error) {
           // If there's an error parsing the user, clear the storage
           localStorage.removeItem("token");
@@ -54,8 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsAuthenticated(false);
         setUser(null);
       }
-    } else {
-      console.log("Running on the server");
     }
     setIsLoading(false);
   }, []);
@@ -80,6 +75,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const register = async (name: string, login: string, email: string, password: string) => {
+    try {
+      // Prepare the payload with the correct field names and values
+      const payload = {
+        name,    // User's full name
+        login,   // User's login/username
+        email,   // User's email address
+        password // User's password
+      };
+
+      // Send the POST request to the backend
+      const response = await api.post("/auth/register", payload, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      // Check if the response status is not 200 (success)
+      if (response.status !== 200) {
+        throw new Error(response.data || "Failed to register");
+      }
+
+      // Optionally, handle success (e.g., show a success message)
+      console.log("User registered successfully:", response.data);
+    } catch (error: any) {
+      // Log the error and rethrow it for the caller to handle
+      console.error("Erro ao registrar:", error.response?.data || error.message);
+      throw new Error(error.response?.data || "Erro ao registrar");
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -100,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isAdmin,
         login,
+        register,
         logout,
       }}
     >

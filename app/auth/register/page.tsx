@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -54,7 +53,8 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      await register(name, email, password);
+      // Pass the correct arguments to the register function
+      await register(name, login, email, password);
       toast({
         title: "Conta criada com sucesso",
         description: "Você será redirecionado para o login",

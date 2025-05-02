@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/lib/api"; // Ensure this is correctly configured
+import { api } from "@/lib/api";
 import {
   Card,
   CardContent,
@@ -14,66 +14,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { DashboardLayout } from "@/components/dashboard-layout";
-import { BibleVersesList as ImportedBibleVersesList } from "@/components/admin/bible-verses-list";
+import { UsersTable } from "@/components/admin/users-table";
+import { BibleVersesList } from "@/components/admin/bible-verses-list";
 import { DevotionalsList } from "@/components/admin/devotionals-list";
 import { CreateBibleVerseForm } from "@/components/admin/create-bible-verse-form";
 import { CreateDevotionalForm } from "@/components/admin/create-devotional-form";
-
-type User = {
-  id: number;
-  name: string;
-  email: string;
-  role: Array<string>;
-};
-
-export function UsersTable({ users }: { users?: User[] }) {
-  if (!users || users.length === 0) {
-    return <p>Nenhum usuário encontrado.</p>;
-  }
-
-  return (
-    <table>
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Email</th>
-          <th>Função</th>
-        </tr>
-      </thead>
-      <tbody>
-        {users.map((user) => (
-          <tr key={user.id}>
-            <td>{user.name}</td>
-            <td>{user.email}</td>
-            <td>{user.role}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
-type Verse = {
-  id: number;
-  text: string;
-  reference: string;
-};
-
-export function LocalBibleVersesList({ verses }: { verses?: Verse[] }) {
-  if (!verses || verses.length === 0) {
-    return <p>Nenhum versículo encontrado.</p>;
-  }
-
-  return (
-    <ul>
-      {verses.map((verse) => (
-        <li key={verse.id}>
-          {verse.text} - {verse.reference}
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 export default function AdminPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -86,7 +31,7 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (authLoading) return; // Wait for loading to complete
+    if (authLoading) return;
 
     if (!isAuthenticated) {
       router.push("/auth/login");
@@ -112,10 +57,14 @@ export default function AdminPage() {
           api.get("/admin/get_all_devotionals"),
         ]);
 
+        console.log("Bible Verses:", versesResponse.data.data);
+        console.log("Devotionals:", devotionalsResponse.data.data);
+
         setUsers(usersResponse.data.data);
         setBibleVerses(versesResponse.data.data);
         setDevotionals(devotionalsResponse.data.data);
       } catch (error) {
+        console.error("Error fetching data:", error);
         toast({
           title: "Erro ao carregar dados",
           description: "Não foi possível carregar os dados do servidor.",
@@ -137,9 +86,7 @@ export default function AdminPage() {
     <DashboardLayout>
       <Card className="gradient-card border-none shadow-soft">
         <CardHeader>
-          <CardTitle className="text-primary-300">
-            Painel Administrativo
-          </CardTitle>
+          <CardTitle className="text-primary-300">Painel Administrativo</CardTitle>
           <CardDescription className="text-text-200">
             Gerencie usuários, versículos bíblicos e devocionais
           </CardDescription>
@@ -168,15 +115,23 @@ export default function AdminPage() {
             </TabsList>
 
             <TabsContent value="users" className="space-y-4">
-              <UsersTable users={users} />
+              <UsersTable 
+                users={users} 
+                onDelete={(id: string) => {
+                  setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
+                  toast({
+                    title: "Usuário removido",
+                    description: `O usuário com ID ${id} foi removido com sucesso.`,
+                    variant: "default",
+                  });
+                }} 
+              />
             </TabsContent>
 
             <TabsContent value="verses" className="space-y-8">
               <Card className="gradient-card border-none shadow-soft">
                 <CardHeader>
-                  <CardTitle className="text-primary-300">
-                    Adicionar Novo Versículo
-                  </CardTitle>
+                  <CardTitle className="text-primary-300">Adicionar Novo Versículo</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <CreateBibleVerseForm />
@@ -185,12 +140,28 @@ export default function AdminPage() {
 
               <Card className="gradient-card border-none shadow-soft">
                 <CardHeader>
-                  <CardTitle className="text-primary-300">
-                    Versículos Cadastrados
-                  </CardTitle>
+                  <CardTitle className="text-primary-300">Versículos Cadastrados</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ImportedBibleVersesList verses={bibleVerses} />
+                  <BibleVersesList
+                    verses={bibleVerses}
+                    onDelete={async (id) => {
+                      try {
+                        await api.delete(`/admin/get_all_bible_verses/${id}`);
+                        setBibleVerses(bibleVerses.filter((verse) => verse.id !== id));
+                        toast({
+                          title: "Versículo excluído",
+                          description: "O versículo foi excluído com sucesso",
+                        });
+                      } catch (error) {
+                        toast({
+                          title: "Erro ao excluir versículo",
+                          description: "Não foi possível excluir o versículo",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -198,9 +169,7 @@ export default function AdminPage() {
             <TabsContent value="devotionals" className="space-y-8">
               <Card className="gradient-card border-none shadow-soft">
                 <CardHeader>
-                  <CardTitle className="text-primary-300">
-                    Criar Novo Devocional
-                  </CardTitle>
+                  <CardTitle className="text-primary-300">Criar Novo Devocional</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <CreateDevotionalForm />
@@ -209,12 +178,28 @@ export default function AdminPage() {
 
               <Card className="gradient-card border-none shadow-soft">
                 <CardHeader>
-                  <CardTitle className="text-primary-300">
-                    Devocionais Cadastrados
-                  </CardTitle>
+                  <CardTitle className="text-primary-300">Devocionais Cadastrados</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <DevotionalsList devotionals={devotionals} />
+                  <DevotionalsList
+                    devotionals={devotionals}
+                    onDelete={async (id) => {
+                      try {
+                        await api.delete(`/admin/get_all_devotionals/${id}`);
+                        setDevotionals(devotionals.filter((devotional) => devotional.id !== id));
+                        toast({
+                          title: "Devocional excluído",
+                          description: "O devocional foi excluído com sucesso",
+                        });
+                      } catch (error) {
+                        toast({
+                          title: "Erro ao excluir devocional",
+                          description: "Não foi possível excluir o devocional",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>

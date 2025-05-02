@@ -24,6 +24,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { api } from "@/lib/api";
+import Link from "next/link";
 
 interface Devotional {
   id: number;
@@ -51,7 +52,7 @@ export default function DashboardPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [availableDates, setAvailableDates] = useState<string[]>([]);
   const { toast } = useToast();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isAdmin } = useAuth(); // Assuming `isAdmin` is added to the auth context
   const router = useRouter();
 
   useEffect(() => {
@@ -277,6 +278,17 @@ export default function DashboardPage() {
           </Card>
         </div>
       </div>
+
+      {/* Admin Button */}
+      {isAdmin && (
+        <div className="mt-6">
+          <Link href="/admin">
+            <Button variant="default" className="w-full md:w-auto">
+              Ir para a página de administração
+            </Button>
+          </Link>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
