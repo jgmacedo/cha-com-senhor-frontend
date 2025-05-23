@@ -20,7 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-interface Devotional {
+export interface Devotional {
   id: number;
   date: string;
   title: string;

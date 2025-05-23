@@ -19,15 +19,18 @@ import { BibleVersesList } from "@/components/admin/bible-verses-list";
 import { DevotionalsList } from "@/components/admin/devotionals-list";
 import { CreateBibleVerseForm } from "@/components/admin/create-bible-verse-form";
 import { CreateDevotionalForm } from "@/components/admin/create-devotional-form";
+import { User } from "@/components/admin/users-table";
+import { BibleVerse } from "@/components/admin/bible-verses-list";
+import { Devotional } from "@/components/admin/devotionals-list";
 
 export default function AdminPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("users");
-  const [users, setUsers] = useState([]);
-  const [bibleVerses, setBibleVerses] = useState([]);
-  const [devotionals, setDevotionals] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [bibleVerses, setBibleVerses] = useState<BibleVerse[]>([]);
+  const [devotionals, setDevotionals] = useState<Devotional[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -115,8 +118,8 @@ export default function AdminPage() {
             </TabsList>
 
             <TabsContent value="users" className="space-y-4">
-              <UsersTable 
-                users={users} 
+              <UsersTable
+                users={users}
                 onDelete={(id: string) => {
                   setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
                   toast({
@@ -124,7 +127,7 @@ export default function AdminPage() {
                     description: `O usuário com ID ${id} foi removido com sucesso.`,
                     variant: "default",
                   });
-                }} 
+                }}
               />
             </TabsContent>
 
@@ -145,9 +148,9 @@ export default function AdminPage() {
                 <CardContent>
                   <BibleVersesList
                     verses={bibleVerses}
-                    onDelete={async (id) => {
+                    onDelete={async (id: number) => {
                       try {
-                        await api.delete(`/admin/get_all_bible_verses/${id}`);
+                        await api.delete(`/admin/delete_bible_verse/${id}`);
                         setBibleVerses(bibleVerses.filter((verse) => verse.id !== id));
                         toast({
                           title: "Versículo excluído",
@@ -185,7 +188,7 @@ export default function AdminPage() {
                     devotionals={devotionals}
                     onDelete={async (id) => {
                       try {
-                        await api.delete(`/admin/get_all_devotionals/${id}`);
+                        await api.delete(`/admin/delete_devotional/${id}`);
                         setDevotionals(devotionals.filter((devotional) => devotional.id !== id));
                         toast({
                           title: "Devocional excluído",

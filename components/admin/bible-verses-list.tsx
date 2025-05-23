@@ -16,7 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-interface BibleVerse {
+export interface BibleVerse {
   id: number;
   reference: string;
   text: string;

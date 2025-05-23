@@ -16,7 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-interface User {
+export interface User {
   id: string;
   name: string;
   email: string;
@@ -56,9 +56,8 @@ export function UsersTable({ users, onDelete }: { users: User[]; onDelete: (id: 
               <TableCell>{user.email}</TableCell>
               <TableCell>
                 <span
-                  className={`px-2 py-1 rounded-full text-xs ${
-                    user.role === "ADMIN" ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-gray-800"
-                  }`}
+                  className={`px-2 py-1 rounded-full text-xs ${user.role === "ADMIN" ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-gray-800"
+                    }`}
                 >
                   {user.role === "ADMIN" ? "Administrador" : "Usuário"}
                 </span>
