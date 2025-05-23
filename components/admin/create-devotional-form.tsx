@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useAuth } from "@/contexts/auth-context"
 
 interface BibleVerse {
   id: number
@@ -23,7 +24,25 @@ interface BibleVerse {
   text: string
 }
 
+interface ApiResponseDTO<T> {
+  success: boolean;
+  data: T | null;
+  message: string | null;
+}
+
+interface DevotionalCreatorDTO {
+  id: number;
+  title: string;
+  reflection: string;
+  prayer: string;
+  practicalApplication: string;
+  supportingVerses: string;
+  date: string;
+  bibleVerse: BibleVerse;
+}
+
 export function CreateDevotionalForm({ onSubmit }: { onSubmit?: (data: any) => void }) {
+  const { isAdmin } = useAuth()
   const [title, setTitle] = useState("")
   const [reflection, setReflection] = useState("")
   const [prayer, setPrayer] = useState("")
@@ -41,17 +60,42 @@ export function CreateDevotionalForm({ onSubmit }: { onSubmit?: (data: any) => v
   }, [])
 
   const fetchVerses = async () => {
-    setIsLoadingVerses(true);
+    if (!isAdmin) {
+      toast({
+        title: "Acesso negado",
+        description: "Você precisa ser um administrador para acessar esta função",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoadingVerses(true)
     try {
-      const response = await api.get("/admin/get_all_bible_verses");
-      console.log("Verses API response:", response.data); // Debugging
-      setVerses(response.data);
+      const response = await api.get<ApiResponseDTO<BibleVerse[]>>("/admin/get_all_bible_verses")
+      
+      if (!response.data) {
+        throw new Error("No response received from API")
+      }
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Failed to fetch verses")
+      }
+
+      if (!response.data.data || !Array.isArray(response.data.data)) {
+        throw new Error("Invalid data format received from API")
+      }
+
+      setVerses(response.data.data);
     } catch (error) {
+      console.error("Error fetching verses:", error);
       toast({
         title: "Erro ao carregar versículos",
-        description: "Não foi possível carregar a lista de versículos",
+        description: error instanceof Error 
+          ? error.message 
+          : "Não foi possível carregar a lista de versículos",
         variant: "destructive",
       });
+      setVerses([]);
     } finally {
       setIsLoadingVerses(false);
     }
@@ -60,10 +104,19 @@ export function CreateDevotionalForm({ onSubmit }: { onSubmit?: (data: any) => v
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedVerseId) {
+    if (!isAdmin) {
+      toast({
+        title: "Acesso negado",
+        description: "Você precisa ser um administrador para criar devocionais",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedVerseId || !date) {
       toast({
         title: "Campos obrigatórios",
-        description: "Por favor, selecione um versículo",
+        description: "Por favor, selecione um versículo e uma data",
         variant: "destructive",
       });
       return;
@@ -72,27 +125,57 @@ export function CreateDevotionalForm({ onSubmit }: { onSubmit?: (data: any) => v
     setIsSubmitting(true);
 
     try {
-      const response = await api.post(`/admin/create_daily_devotional/${selectedVerseId}`);
+      // Format date to ISO string (YYYY-MM-DD)
+      const formattedDate = date.toISOString().split('T')[0];
 
-      if (response.status === 201) {
-        toast({
-          title: "Devocional criado",
-          description: "O devocional foi criado com sucesso",
-        });
+      // Log request data for debugging
+      console.debug('Request data:', {
+        verseId: selectedVerseId,
+        date: formattedDate,
+      });
 
-        // Clear the form
-        setSelectedVerseId("");
-      } else {
-        toast({
-          title: "Erro ao criar devocional",
-          description: response.data?.message || "Erro desconhecido",
-          variant: "destructive",
-        });
+      const response = await api.post<ApiResponseDTO<DevotionalCreatorDTO>>(
+        '/admin/create_devotional',
+        null,  // empty body as POST
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'verse-id': String(selectedVerseId),  // ensure it's a string
+            'devotional-date': formattedDate
+          }
+        }
+      );
+
+      console.debug('Response:', response.data);
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Falha ao criar devocional");
       }
+
+      toast({
+        title: "Sucesso",
+        description: "Devocional criado com sucesso",
+      });
+
+      // Reset form
+      setSelectedVerseId("");
+      setDate(new Date());
+      
+      if (onSubmit && response.data.data) {
+        onSubmit(response.data.data);
+      }
+      
     } catch (error: any) {
+      console.error("Erro completo:", error);
+      console.error("Response data:", error.response?.data);
+      
+      const errorMessage = error.response?.data?.message 
+        || error.message 
+        || "Não foi possível criar o devocional";
+      
       toast({
         title: "Erro ao criar devocional",
-        description: error.response?.data?.message || "Erro desconhecido",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

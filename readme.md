@@ -6,12 +6,10 @@ O "Chá com o Senhor" é um projeto dedicado a promover momentos de reflexão, e
 
 ## Como funciona?
 
-O projeto organiza encontros periódicos, presenciais ou online, onde os participantes podem:
+O projeto organiza devocionais diariamente, onde os participantes podem:
 
-- Compartilhar leituras bíblicas e devocionais
-- Participar de rodas de conversa e oração
-- Realizar dinâmicas e atividades interativas
-- Trocar experiências e testemunhos de vida
+- Ler e discutir passagens bíblicas
+- Compartilhar testemunhos e experiências pessoais
 
 As atividades são planejadas para serem acessíveis a todos, independentemente do nível de conhecimento religioso, promovendo um ambiente de respeito e crescimento mútuo.
 

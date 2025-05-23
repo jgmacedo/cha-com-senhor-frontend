@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/popover";
 import { api } from "@/lib/api";
 import Link from "next/link";
+import { ShowDevotional } from "@/components/ui/show-devotional";
 
 interface Devotional {
   id: number;
@@ -91,8 +92,10 @@ export default function DashboardPage() {
         }
 
         const response = await api.get(`/devotionals/check_date?date=${key}`);
-        setDevotional(response.data);
+        // Update this line to handle the nested data structure
+        setDevotional(response.data.data);
       } catch (error) {
+        console.error('Error fetching devotional:', error);
         toast({
           title: "Erro ao carregar devocional",
           description: "Não foi possível carregar o devocional para esta data",
@@ -180,14 +183,14 @@ export default function DashboardPage() {
                 {isLoading
                   ? "Carregando..."
                   : devotional
-                  ? devotional.title
-                  : "Nenhum devocional disponível"}
+                    ? devotional.title
+                    : "Nenhum devocional disponível"}
               </CardTitle>
               <CardDescription className="text-text-200">
                 {devotional?.date && isValid(new Date(devotional.date))
                   ? format(new Date(devotional.date), "PPP", {
-                      locale: ptBR,
-                    })
+                    locale: ptBR,
+                  })
                   : ""}
               </CardDescription>
             </CardHeader>
@@ -197,78 +200,7 @@ export default function DashboardPage() {
                   <Loader2 className="h-8 w-8 animate-spin text-accent-100" />
                 </div>
               ) : devotional ? (
-                <div className="space-y-6">
-                  {devotional.bibleVerse && (
-                    <div className="bg-bg-100/50 p-4 rounded-md border border-primary-100 shadow-inner-soft">
-                      <p className="font-semibold text-primary-300">
-                        {devotional.bibleVerse.reference}
-                      </p>
-                      <p className="italic mt-2 text-text-100">
-                        {devotional.bibleVerse.text}
-                      </p>
-                    </div>
-                  )}
-
-                  <Separator className="bg-primary-100" />
-
-                  <div className="prose max-w-none">
-                    {devotional.reflection && (
-                      <>
-                        <h3 className="text-xl font-semibold text-primary-300 mt-6">
-                          Reflexão
-                        </h3>
-                        <div
-                          className="text-text-100"
-                          dangerouslySetInnerHTML={{
-                            __html: devotional.reflection,
-                          }}
-                        />
-                      </>
-                    )}
-
-                    {devotional.prayer && (
-                      <>
-                        <h3 className="text-xl font-semibold text-primary-300 mt-6">
-                          Oração
-                        </h3>
-                        <div
-                          className="text-text-100"
-                          dangerouslySetInnerHTML={{
-                            __html: devotional.prayer,
-                          }}
-                        />
-                      </>
-                    )}
-
-                    {devotional.practicalApplication && (
-                      <>
-                        <h3 className="text-xl font-semibold text-primary-300 mt-6">
-                          Aplicação Prática
-                        </h3>
-                        <div
-                          className="text-text-100"
-                          dangerouslySetInnerHTML={{
-                            __html: devotional.practicalApplication,
-                          }}
-                        />
-                      </>
-                    )}
-
-                    {devotional.supportingVerses && (
-                      <>
-                        <h3 className="text-xl font-semibold text-primary-300 mt-6">
-                          Versículos de Apoio
-                        </h3>
-                        <div
-                          className="text-text-100"
-                          dangerouslySetInnerHTML={{
-                            __html: devotional.supportingVerses,
-                          }}
-                        />
-                      </>
-                    )}
-                  </div>
-                </div>
+                <ShowDevotional {...devotional} />
               ) : (
                 <div className="flex justify-center items-center h-64 text-text-200">
                   Nenhum devocional encontrado para a data selecionada.
