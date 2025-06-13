@@ -1,7 +1,14 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-// Ensure environment variable is used if available
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+// Add console log to debug the API URL in both environments
+console.log('API URL:', process.env.NEXT_PUBLIC_API_URL);
+
+// Remove the default localhost value to avoid confusion
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_BASE_URL) {
+  console.error('WARNING: NEXT_PUBLIC_API_URL is not defined');
+}
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

@@ -56,6 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (login: string, password: string) => {
+    console.log("auth-context login - NEXT_PUBLIC_API_URL:", process.env.NEXT_PUBLIC_API_URL);
+    console.log("auth-context login - api.defaults.baseURL:", api.defaults.baseURL);
     try {
       const response = await api.post("/auth/login", { login, password });
       const { token, user: username, roles } = response.data;
