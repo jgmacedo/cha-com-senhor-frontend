@@ -129,17 +129,9 @@ export function CreateDevotionalForm({ onSubmit }: { onSubmit?: (data: any) => v
 
       // Ensure JWT is included explicitly
       const token = localStorage.getItem('token');
-      // Call new endpoint with path variables for verseId and date
-      // Send no body and clear default Content-Type, include only Authorization
+      // Trigger POST with default headers (includes Authorization via interceptor)
       const response = await api.post<ApiResponseDTO<DevotionalCreatorDTO>>(
-        `/admin/create_devotional/${selectedVerseId}/${formattedDate}`,
-        null,
-        {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : undefined,
-            'Content-Type': undefined,
-          },
-        }
+        `/admin/create_devotional/${selectedVerseId}/${formattedDate}`
       );
 
       console.debug('Response:', response.data);
