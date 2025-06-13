@@ -129,11 +129,12 @@ export function CreateDevotionalForm({ onSubmit }: { onSubmit?: (data: any) => v
       const formattedDate = date.toISOString().split('T')[0];
 
       // Send headers as required by backend
-      const response = await api.post<ApiResponseDTO<DevotionalCreatorDTO>>(
+      const response = await api.post(
         '/admin/create_devotional',
         null,
         {
           headers: {
+            ...api.defaults.headers.common,      // contains the JWT
             'verse-id': selectedVerseId,
             'devotional-date': formattedDate,
           },
