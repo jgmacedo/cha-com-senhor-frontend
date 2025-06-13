@@ -72,7 +72,7 @@ export function CreateDevotionalForm({ onSubmit }: { onSubmit?: (data: any) => v
     setIsLoadingVerses(true)
     try {
       const response = await api.get<ApiResponseDTO<BibleVerse[]>>("/admin/get_all_bible_verses")
-      
+
       if (!response.data) {
         throw new Error("No response received from API")
       }
@@ -90,8 +90,8 @@ export function CreateDevotionalForm({ onSubmit }: { onSubmit?: (data: any) => v
       console.error("Error fetching verses:", error);
       toast({
         title: "Erro ao carregar versículos",
-        description: error instanceof Error 
-          ? error.message 
+        description: error instanceof Error
+          ? error.message
           : "Não foi possível carregar a lista de versículos",
         variant: "destructive",
       });
@@ -143,30 +143,30 @@ export function CreateDevotionalForm({ onSubmit }: { onSubmit?: (data: any) => v
       console.debug('Response:', response.data);
 
       if (!response.data.success) {
-        throw new Error(response.data.message || "Falha ao criar devocional");
+        throw new Error(response.data.message || "Falha ao criar devocional. tente novamente.");
       }
 
       toast({
         title: "Sucesso",
-        description: "Devocional criado com sucesso",
+        description: "Devocional criado com sucesso.",
       });
 
       // Reset form
       setSelectedVerseId("");
       setDate(new Date());
-      
+
       if (onSubmit && response.data.data) {
         onSubmit(response.data.data);
       }
-      
+
     } catch (error: any) {
       console.error("Erro completo:", error);
       console.error("Response data:", error.response?.data);
-      
-      const errorMessage = error.response?.data?.message 
-        || error.message 
+
+      const errorMessage = error.response?.data?.message
+        || error.message
         || "Não foi possível criar o devocional";
-      
+
       toast({
         title: "Erro ao criar devocional",
         description: errorMessage,
