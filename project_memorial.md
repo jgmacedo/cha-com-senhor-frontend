@@ -12,6 +12,8 @@
 - **Banco de Dados:** PostgreSQL/MySQL (inferido pela estrutura das APIs)
 - **Autenticação:** JWT (JSON Web Tokens)
 - **Deploy:** Frontend na Vercel, Backend em servidor dedicado
+- **LLMs utilizadas::** Gemini, Claude, OpenAI GPT-4, Vercel v0 para prototipação, OpenRouter para criação de devocionais
+
 
 ---
 
