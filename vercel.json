@@ -4,14 +4,6 @@
   "framework": "nextjs",
   "installCommand": "npm install --legacy-peer-deps",
   "devCommand": "npm run dev",
-  "env": {
-    "NEXT_PUBLIC_API_URL": "@NEXT_PUBLIC_API_URL"
-  },
-  "build": {
-    "env": {
-      "NEXT_PUBLIC_API_URL": "@NEXT_PUBLIC_API_URL"
-    }
-  },
   "functions": {
     "app/**": {
       "maxDuration": 30
