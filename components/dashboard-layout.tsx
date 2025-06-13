@@ -59,14 +59,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </SheetTrigger>
         <SheetContent
           side="left"
-          className="gradient-header text-white w-64 p-0"
+          className="gradient-header text-white w-full max-w-[16rem] p-0"
         >
           <div className="flex flex-col h-full">
             <div className="flex items-center gap-2 p-6 border-b border-white/20">
               <Coffee className="h-6 w-6" />
               <h2 className="text-xl font-bold">Chá Com o Senhor</h2>
             </div>
-            <nav className="flex-1 p-4">
+            <nav className="flex-1 p-4 overflow-y-auto">
               <ul className="space-y-2">
                 {navigation.map((item) => (
                   <li key={item.name}>
@@ -145,7 +145,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Main content */}
       <div className="md:pl-64 transition-all duration-300">
         <header className="bg-white dark:bg-primary-300/10 shadow-soft transition-colors duration-300">
-          <div className="px-4 py-6 sm:px-6 md:px-8 flex justify-between items-center">
+          <div className="pl-12 pr-4 py-6 sm:pl-12 sm:pr-6 md:px-8 flex justify-between items-center">
             <h1 className="text-2xl font-bold text-primary-300 transition-colors duration-300">
               {pathname === "/dashboard" && "Devocional Diário"}
               {pathname === "/dashboard/profile" && "Meu Perfil"}

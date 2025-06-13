@@ -124,7 +124,7 @@ export default function Home() {
         <div className="container mx-auto px-4 text-center">
           <p>
             © {new Date().getFullYear()} Chá Com o Senhor. Todos os direitos
-            reservados.
+            reservados. João Gabriel Abreu Macedo.
           </p>
         </div>
       </footer>
