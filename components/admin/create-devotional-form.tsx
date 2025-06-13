@@ -129,9 +129,10 @@ export function CreateDevotionalForm({ onSubmit }: { onSubmit?: (data: any) => v
 
       // Ensure JWT is included explicitly
       const token = localStorage.getItem('token');
-      // Trigger POST with default headers (includes Authorization via interceptor)
+      // Send empty JSON body to satisfy @RequestBody dummy, and include Authorization via interceptor
       const response = await api.post<ApiResponseDTO<DevotionalCreatorDTO>>(
-        `/admin/create_devotional/${selectedVerseId}/${formattedDate}`
+        `/admin/create_devotional/${selectedVerseId}/${formattedDate}`,
+        {} // dummy body for @RequestBody
       );
 
       console.debug('Response:', response.data);
