@@ -125,18 +125,17 @@ export function CreateDevotionalForm({ onSubmit }: { onSubmit?: (data: any) => v
     setIsSubmitting(true);
 
     try {
-      // Format date to ISO string (YYYY-MM-DD)
       const formattedDate = date.toISOString().split('T')[0];
 
-      // Send headers as required by backend
-      const response = await api.post(
-        '/admin/create_devotional',
-        null,
+      // Ensure JWT is included explicitly
+      const token = localStorage.getItem('token');
+      // Call new endpoint with path variables for verseId and date
+      const response = await api.post<ApiResponseDTO<DevotionalCreatorDTO>>(
+        `/admin/create_devotional/${selectedVerseId}/${formattedDate}`,
+        {},
         {
           headers: {
-            ...api.defaults.headers.common,      // contains the JWT
-            'verse-id': selectedVerseId,
-            'devotional-date': formattedDate,
+            Authorization: token ? `Bearer ${token}` : undefined,
           },
         }
       );
