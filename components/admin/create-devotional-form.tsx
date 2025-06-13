@@ -128,21 +128,15 @@ export function CreateDevotionalForm({ onSubmit }: { onSubmit?: (data: any) => v
       // Format date to ISO string (YYYY-MM-DD)
       const formattedDate = date.toISOString().split('T')[0];
 
-      // Log request data for debugging
-      console.debug('Request data:', {
-        verseId: selectedVerseId,
-        date: formattedDate,
-      });
-
+      // Send headers as required by backend
       const response = await api.post<ApiResponseDTO<DevotionalCreatorDTO>>(
         '/admin/create_devotional',
-        null,  // empty body as POST
+        null,
         {
           headers: {
-            'Content-Type': 'application/json',
-            'verse-id': String(selectedVerseId),  // ensure it's a string
-            'devotional-date': formattedDate
-          }
+            'verse-id': selectedVerseId,
+            'devotional-date': formattedDate,
+          },
         }
       );
 
