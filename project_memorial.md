@@ -95,6 +95,9 @@ Atende **Joana** que quer acompanhar progresso e histórico de devocionais, func
 
 ---
 
+## Resumo da arquitetura do projeto:
+![Arquitetura completa do projeto](/diagram.png)
+
 ## 1. Elementos Essenciais (2,0 pontos)
 
 ### 1.1 Tipografia
